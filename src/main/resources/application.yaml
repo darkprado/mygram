@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/mygram?useSSL=false
+    username: root
+    password: Java2021
+  jpa:
+    hibernate:
+      ddl-auto: update
