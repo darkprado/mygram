@@ -25,7 +25,7 @@ public class SignupRequest {
     private String confirmPassword;
     @Email(message = "Its should have email format")
     @NotBlank(message = "Email is required")
-//    @ValidEmail
+    @ValidEmail
     private String email;
 
 }
