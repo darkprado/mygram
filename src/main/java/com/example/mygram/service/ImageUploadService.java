@@ -1,7 +1,9 @@
 package com.example.mygram.service;
 
 import com.example.mygram.entity.ImageModel;
+import com.example.mygram.entity.Post;
 import com.example.mygram.entity.User;
+import com.example.mygram.exceptions.ImageNotFoundException;
 import com.example.mygram.repository.ImageModelRepository;
 import com.example.mygram.repository.PostRepository;
 import com.example.mygram.repository.UserRepository;
@@ -49,6 +51,35 @@ public class ImageUploadService {
         imageModel.setImageBytes(compressBytes(file.getBytes()));
         imageModel.setName(file.getOriginalFilename());
         return imageModelRepository.save(imageModel);
+    }
+
+    public ImageModel uploadImageToPost(MultipartFile file, Principal principal, Long postId) throws IOException {
+        User user = getUserByPrincipal(principal);
+        Post post = user.getPosts().stream().filter(p -> p.getId() == (postId)).collect(toSingleCollector());
+        ImageModel imageModel = new ImageModel();
+        imageModel.setPostId(post.getId());
+        imageModel.setImageBytes(compressBytes(file.getBytes()));
+        imageModel.setName(file.getOriginalFilename());
+        LOGGER.info("Uploading image to Post {}", post.getId());
+        return imageModelRepository.save(imageModel);
+    }
+
+    public ImageModel getImageToUser(Principal principal) {
+        User user = getUserByPrincipal(principal);
+        ImageModel imageModel = imageModelRepository.findByUserId(user.getId()).orElse(null);
+        if (!ObjectUtils.isEmpty(imageModel)) {
+            imageModel.setImageBytes(decompressBytes(imageModel.getImageBytes()));
+        }
+        return imageModel;
+    }
+
+    public ImageModel getImageToPost(Long postId) {
+        ImageModel imageModel = imageModelRepository.findByPostId(postId)
+                .orElseThrow(() -> new ImageNotFoundException("Cannot find image to Post " + postId));
+        if (!ObjectUtils.isEmpty(imageModel)) {
+            imageModel.setImageBytes(decompressBytes(imageModel.getImageBytes()));
+        }
+        return imageModel;
     }
 
     private <T> Collector<T, ?, T> toSingleCollector() {
